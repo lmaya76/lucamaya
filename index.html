@@ -8,9 +8,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 /* VOICE everyday portfolio with an atlas's authority: calm, precise, nonpartisan
-   IDEA a printed atlas of the United States: one plate per state, one key per method
+   IDEA a printed atlas of the United States: one plate per state: today's lines beside a better set
    PICTURE a tile map of all 50 states on the home page; district maps on every state plate
-   COLOUR white paper, slate ink; methods in teal, ochre and violet (never party red or blue)
+   COLOUR white paper, slate ink; optimal map in teal, current in slate (never party red or blue)
    TYPE Barlow Condensed (road-map lettering) + Barlow
    LAYOUT title across the top, map full width beneath; plates stack below 600px */
 :root{color-scheme:light dark;--bg:light-dark(#ffffff,#0f1820);--ink:light-dark(#14212c,#e6ecf1);--mute:light-dark(#5b6873,#9aa8b4);--rule:light-dark(#d9dee2,#2a3a47);--panel:light-dark(#f3f5f6,#16222c);--geo:#0f8a8f;--coi:#c98900;--par:#6d4fc4;--cur:light-dark(#62707c,#8e9ca8);--land:light-dark(#e9edf0,#1d2b36)}
@@ -81,7 +81,20 @@ footer{border-top:1px solid var(--rule);color:var(--mute);font-size:14px}
 .rrow i{height:8px;background:var(--land);border-radius:4px;overflow:hidden}
 .rrow b{display:block;height:100%;background:var(--c,var(--cur))}
 .rrow em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums}
-@media(max-width:900px){.cols{grid-template-columns:minmax(0,1fr)}.two{grid-template-columns:minmax(0,1fr)}}
+.vs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:22px}
+.pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.pair figure{margin:0}.pair figcaption{margin-top:6px}
+.btn{display:inline-flex;align-items:center;min-height:44px;padding:10px 16px;border-radius:6px;background:var(--geo);color:#fff;font-weight:600;text-decoration:none}
+.cmp{width:100%;border-collapse:collapse;margin-top:18px;font-size:15px;background:var(--bg);border-radius:8px}
+.cmp th,.cmp td{padding:10px 12px;border-bottom:1px solid var(--rule);text-align:left}
+.cmp th{font-weight:600;color:var(--mute);font-size:14px}
+.cmp .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cb{display:grid;grid-template-columns:minmax(60px,1fr) 2.4em;gap:8px;align-items:center}
+.cb i{height:10px;background:var(--land);border-radius:5px;overflow:hidden}.cb b{display:block;height:100%}
+.cb em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums}
+.up{color:var(--geo);font-weight:600}.down{color:#c8371e;font-weight:600}
+.scroll{overflow-x:auto}
+@media(max-width:900px){.vs{grid-template-columns:minmax(0,1fr)}.cols{grid-template-columns:minmax(0,1fr)}.two{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:600px){header{position:static}.tiles{gap:3px}.tile small{display:none}.tile{border-radius:4px}}
 @media(prefers-reduced-motion:reduce){.tile{transition:none}}
 </style>
@@ -101,22 +114,9 @@ footer{border-top:1px solid var(--rule);color:var(--mute);font-size:14px}
 {
 const CONTENT = window.CONTENT || {}; /* map content lives in content.js */
 const RATINGS = [["proportionality","Proportionality"],["competitiveness","Competitiveness"],["minority","Minority representation"],["compactness","Compactness"],["splitting","County splitting"]];
-const ratingsHTML=r=>{const rows=RATINGS.filter(([k])=>r&&r[k]!=null&&r[k]!=="");if(!rows.length)return "";return `<div class="rate"><p class="note" style="margin:0 0 4px">Dave's Redistricting ratings (0 to 100)</p>${rows.map(([k,l])=>{const v=Math.max(0,Math.min(100,Number(r[k])||0));return `<div class="rrow"><span>${l}</span><i><b style="width:${v}%"></b></i><em>${esc(r[k])}</em></div>`}).join("")}</div>`};
 
-const METHODS = [
-  {id:"geographic",name:"Geographic uniformity",color:"var(--geo)",hue:184,
-   lede:"Districts drawn for shape and simplicity: equal population, compact outlines, and as few county and city splits as possible.",
-   pri:["Compactness: districts close to round or square, not stretched or tentacled","Follow county and municipal lines wherever population allows","Ignore partisan and demographic data while drawing"],
-   trade:"Simple, easy-to-explain lines, but they can split communities that share interests across a county border and can produce lopsided results where voters cluster."},
-  {id:"communities",name:"Communities of interest",color:"var(--coi)",hue:40,
-   lede:"Districts drawn around people who share economic, cultural, or geographic ties, so each community speaks with one voice.",
-   pri:["Keep metro areas, regions, and economic corridors whole","Respect natural boundaries such as rivers and mountain ranges","Group places that share schools, industries, and media markets"],
-   trade:"Reflects how people actually live, but defining a community involves judgment, and districts can take less regular shapes."},
-  {id:"partisan",name:"Partisan uniformity",color:"var(--par)",hue:258,
-   lede:"Districts drawn so the map as a whole reflects how the state votes, without building in an advantage for either party.",
-   pri:["Seat outcomes track the statewide vote across a range of elections","Measure fairness with standard tests such as efficiency gap and mean-median difference","Keep districts contiguous and population-equal"],
-   trade:"Directly targets fair outcomes, but requires using election data while drawing and can mean less compact lines."}
-];
+const OPT = {id:"optimal",name:"Optimal map",color:"var(--geo)",hue:184};
+const PRINCIPLES = window.PRINCIPLES || [];
 
 /* code, name, seats (2020 apportionment), tile column, tile row */
 const STATES = [["AK","Alaska",1,0,0],["ME","Maine",2,10,0],["WI","Wisconsin",8,5,1],["VT","Vermont",1,9,1],["NH","New Hampshire",2,10,1],
@@ -147,18 +147,18 @@ function districtSVG(st, variant, W, H){
   const fr=[];
   for(let d=0;d<n;d++){let c;do{c=cells[Math.floor(r2()*cells.length)]}while(g[c]!==-1);g[c]=d;fr.push([c])}
   const nb=c=>{const x=c%W,y=(c-x)/W,o=[];if(x>0)o.push([c-1,1]);if(x<W-1)o.push([c+1,1]);if(y>0)o.push([c-W,0]);if(y<H-1)o.push([c+W,0]);return o};
-  const push=(d,c)=>{for(const [m,horiz] of nb(c)){if(g[m]!==-1)continue;if(variant==="partisan"&&!horiz&&r2()>.3)continue;fr[d].push(m)}};
+  const push=(d,c)=>{for(const [m,horiz] of nb(c)){if(g[m]!==-1)continue;fr[d].push(m)}};
   fr.forEach((f,d)=>push(d,f[0]));
   let live=true,guard=0;
   while(live&&guard++<200000){live=false;
     const order=variant==="current"?[Math.floor(r2()*n)]:[...Array(n).keys()];
     for(const d of order){const f=fr[d];
-      while(f.length){const i=variant==="geographic"||variant==="partisan"?0:Math.floor(r2()*f.length);const c=f.splice(i,1)[0];
+      while(f.length){const i=variant==="optimal"?0:Math.floor(r2()*f.length);const c=f.splice(i,1)[0];
         if(g[c]===-1){g[c]=d;push(d,c);break}}
       if(f.length)live=true}
     if(variant==="current"&&!live)live=fr.some(f=>f.length)}
   for(let pass=0;pass<40;pass++){let left=0;for(const c of cells)if(g[c]===-1){const m=nb(c).find(([q])=>g[q]>=0);if(m)g[c]=g[m[0]];else left++}if(!left)break}
-  const m=METHODS.find(x=>x.id===variant);
+  const m=variant==="optimal"?OPT:null;
   const fill=d=>{const t=(d*0.618034)%1;return m?`hsl(${m.hue} ${45+t*25}% ${42+t*36}%)`:`hsl(210 ${6+t*8}% ${48+t*36}%)`};
   const paths=Array.from({length:n},()=>"");
   for(const c of cells){const d=g[c];if(d<0)continue;const x=c%W,y=(c-x)/W;paths[d]+=`M${x} ${y}h1v1h-1z`}
@@ -184,31 +184,36 @@ const loadSlots=()=>{for(const el of document.querySelectorAll(".slot[data-src]"
 
 /* ---------- shared pieces ---------- */
 function nav(route){
-  document.getElementById("nav").innerHTML=[["home","Home"],["states","States"],...METHODS.map(m=>[m.id,m.name.split(" ")[0]==="Communities"?"Communities":m.name.split(" ")[0],m.color]),["about","About"]]
-    .map(([h,t,c])=>`<a href="#${h}"${route===h?' aria-current="page"':""}>${c?`<i style="background:${c}"></i>`:""}${t}</a>`).join("");
+  document.getElementById("nav").innerHTML=[["home","Home"],["states","States"],["gallery","Gallery"],["about","About"]]
+    .map(([h,t])=>`<a href="#${h}"${route===h?' aria-current="page"':""}>${t}</a>`).join("");
 }
 const tileMap=()=>`<div class="tiles" role="list">${STATES.map(s=>`<a role="listitem" class="tile${s.seats===1?" one":""}" style="grid-column:${s.c+1};grid-row:${s.r+1};--k:${s.seats===1?0:Math.round(12+Math.log(s.seats)/Math.log(52)*78)}%" href="#${s.slug}" title="${s.name}: ${s.seats} ${s.seats===1?"seat":"seats"}"><b>${s.code}</b><small>${s.seats}</small></a>`).join("")}</div>
-<div class="key"><span><span class="ramp"></span>More districts</span><span>Dashed: one at-large seat, no lines to draw</span><span>Select any state to open its maps</span></div>`;
-const methodCards=()=>`<div class="cols">${METHODS.map(m=>`<article class="card" style="--c:${m.color}"><h3>${m.name}</h3><div class="pic">${mapFor(STATES.find(s=>s.code==="NC"),m.id,false)}</div><p>${m.lede}</p><a class="more" href="#${m.id}">See every state drawn this way →</a></article>`).join("")}</div>`;
+<div class="key"><span><span class="ramp"></span>More districts</span><span>Dashed: one at-large seat, no lines to draw</span><span>Select any state to compare its maps</span></div>`;
 const jump=sel=>`<select id="jump" aria-label="Jump to a state"><option value="">Jump to a state…</option>${ALPHA.map(s=>`<option value="${s.slug}"${s.slug===sel?" selected":""}>${s.name}</option>`).join("")}</select>`;
+const principles=()=>PRINCIPLES.length?`<ul class="steps" style="margin-top:12px">${PRINCIPLES.map(p=>`<li>${esc(p)}</li>`).join("")}</ul>`:"";
+const pair=st=>`<div class="pair"><figure><div class="plate">${mapFor(st,"current",false)}</div><figcaption><span class="tag" style="--c:var(--cur)">Current</span></figcaption></figure><figure><div class="plate">${mapFor(st,"optimal",false)}</div><figcaption><span class="tag" style="--c:var(--geo)">Optimal</span></figcaption></figure></div>`;
+function compare(cur,opt){
+  const rows=RATINGS.filter(([k])=>[cur,opt].some(r=>r&&r[k]!=null&&r[k]!==""));
+  if(!rows.length)return "";
+  const bar=(v,c)=>v==null||v===""?`<td class="num">–</td>`:`<td><div class="cb"><i><b style="width:${Math.max(0,Math.min(100,+v||0))}%;background:${c}"></b></i><em>${esc(v)}</em></div></td>`;
+  return `<div class="scroll"><table class="cmp"><thead><tr><th>Dave's Redistricting rating (0 to 100, higher is better)</th><th>Current</th><th>Optimal</th><th class="num">Change</th></tr></thead><tbody>${rows.map(([k,l])=>{const a=cur?.[k],b=opt?.[k];const d=(a!=null&&a!==""&&b!=null&&b!=="")?(+b)-(+a):null;
+    return `<tr><td>${l}</td>${bar(a,"var(--cur)")}${bar(b,"var(--geo)")}<td class="num ${d>0?"up":d<0?"down":""}">${d==null?"–":(d>0?"+":"")+d}</td></tr>`}).join("")}</tbody></table></div>`;
+}
 
 /* ---------- pages ---------- */
 const pages={
 home:()=>`<section class="band"><div class="wrap">
   <h1>Redrawing the Map</h1>
-  <p class="lede">Every state's congressional districts, redrawn three ways. Compare the current map with alternatives built for geographic simplicity, for communities of interest, and for partisan balance, and see what each choice changes.</p>
+  <p class="lede">Every state's congressional districts, redrawn. For each state, compare the map in use today with an optimal map drawn by Luca Maya, and see what changes when the lines are drawn for fairness.</p>
   ${tileMap()}
   <p class="note" style="margin-top:12px">States without a finished map show a generated placeholder until Luca adds his own.</p>
 </div></section>
-<section class="band alt"><div class="wrap">
-  <h2>Three ways to draw fair districts</h2>
-  <p class="lede">Every map has to balance competing goals. Each alternative here commits to one principle and follows it consistently across all 44 states with more than one district.</p>
-  ${methodCards()}
-</div></section>
-<section class="band"><div class="wrap two">
-  <div><h2>How to read each state</h2>
-  <ol class="steps" style="margin-top:16px"><li>Start with the current map, the districts in use today.</li><li>Compare the three alternatives side by side, each drawn under one method.</li><li>Read the narrative for each map: what it prioritizes, what it gives up, and how it changes representation.</li><li>Switch to a method page to see the same approach applied to every state.</li></ol></div>
-  <div class="plate">${mapFor(STATES.find(s=>s.code==="PA"),"current",true)}<p class="note" style="margin:8px 0 0">Example plate: Pennsylvania, current map (placeholder)</p></div>
+<section class="band alt"><div class="wrap two">
+  <div><h2>Two maps for every state</h2>
+  <p class="lede">Each state page puts the current districts next to Luca's optimal map, with the ratings from Dave's Redistricting App and a short explanation of the choices behind the new lines.</p>
+  ${PRINCIPLES.length?`<h3 style="margin-top:20px">What makes a map optimal</h3>${principles()}`:""}
+  <p style="margin-top:16px"><a class="btn" href="#gallery">See every optimal map</a></p></div>
+  <div>${pair(STATES.find(s=>s.code==="PA"))}<p class="note" style="margin:8px 0 0">Example: Pennsylvania (placeholder maps)</p></div>
 </div></section>`,
 
 states:()=>`<section class="band"><div class="wrap">
@@ -218,66 +223,50 @@ states:()=>`<section class="band"><div class="wrap">
   <ul class="list">${ALPHA.map(s=>`<li><a href="#${s.slug}">${s.name}<span>${s.seats}</span></a></li>`).join("")}</ul>
 </div></section>`,
 
+gallery:()=>`<section class="band alt"><div class="wrap">
+  <h1>Every optimal map</h1>
+  <p class="lede">Luca's optimal map for each of the ${MULTI.length} states with more than one district. Select a state to compare it with the current map.</p>
+  <div class="grid">${MULTI.map(s=>`<a class="mini" style="--c:var(--geo)" href="#${s.slug}">${mapFor(s,"optimal",false)}<b>${s.name}</b><small>${s.seats} districts</small></a>`).join("")}</div>
+</div></section>`,
+
 about:()=>`<section class="band"><div class="wrap two">
   <div><h1>About this project</h1>
   <p class="lede">Luca Maya is a high school student who spends his free time drawing alternative congressional maps.</p>
-  <p>This site collects that work in one place: for every state, the map in use today and three alternatives, each built on a single principle and explained in plain language.</p>
-  <p>The goal is not to argue for one party. It is to show that how lines are drawn is a choice, and that different, defensible choices lead to very different maps.</p>
+  <p>This site collects that work in one place: for every state, the map in use today and the map Luca considers optimal, explained in plain language.</p>
+  <p>The goal is not to argue for one party. It is to show that how lines are drawn is a choice, and that a better choice is possible in every state.</p>
+  ${PRINCIPLES.length?`<h3 style="margin-top:22px">What makes a map optimal</h3>${principles()}`:""}
   <h3 style="margin-top:22px">Method and data</h3>
-  <p>District populations follow the 2020 Census. Maps are drawn in Dave's Redistricting App, and each alternative keeps districts contiguous and as close to equal population as practical. Ratings shown on state pages come from the app's built-in analytics. State narratives describe the specific choices made.</p></div>
-  <div class="plate">${mapFor(STATES.find(s=>s.code==="OH"),"communities",true)}</div>
+  <p>District populations follow the 2020 Census. Maps are drawn in Dave's Redistricting App, and every district is contiguous and as close to equal population as practical. Ratings on state pages come from the app's built-in analytics.</p></div>
+  <div class="plate">${mapFor(STATES.find(s=>s.code==="OH"),"optimal",true)}</div>
 </div></section>`
 };
 
 function statePage(st){
   const i=ALPHA.indexOf(st),prev=ALPHA[(i+49)%50],next=ALPHA[(i+1)%50];
-  const c=CONTENT[st.code]||{};
+  const c=CONTENT[st.code]||{},cur=c.current||{},opt=c.optimal||{};
   const head=`<div class="crumbs"><a href="#states">All states</a>${jump(st.slug)}</div><h1>${esc(st.name)}</h1>`;
   const pager=`<div class="pager"><a href="#${prev.slug}">← ${prev.name}</a><a href="#${next.slug}">${next.name} →</a></div>`;
   if(st.seats===1)return `<section class="band"><div class="wrap">${head}
     <p class="lede">${esc(st.name)} elects one representative at large, so there are no congressional districts to draw. Its seat is shown here to complete the map of all 50 states.</p>${pager}</div></section>`;
-  const cur=c.current||{};
+  const card=(e,v,label,color,fallback)=>`<article class="card" style="--c:${color}"><span class="tag">${label}</span>
+      <div class="pic">${mapFor(st,v,true)}</div>
+      <p>${e.narrative?esc(e.narrative):fallback}</p>
+      ${e.link?`<a class="more" href="${esc(e.link)}" target="_blank" rel="noopener">Open in Dave's Redistricting App →</a>`:""}</article>`;
   return `<section class="band"><div class="wrap">${head}
-  <p class="lede">${st.seats} congressional districts. The current map, followed by three alternatives.</p>
-  <div class="two" style="margin-top:22px">
-    <div class="plate">${mapFor(st,"current",true)}</div>
-    <div><span class="tag" style="--c:var(--cur)">Current map</span>
-      <h2 style="margin:8px 0 12px">The districts in use today</h2>
-      <p>${cur.narrative?esc(cur.narrative):`Luca's notes on ${esc(st.name)}'s current map: how it was drawn, who drew it, and what stands out about its lines.`}</p>
-      ${ratingsHTML(cur.ratings)}
-      ${cur.link?`<p><a href="${esc(cur.link)}" target="_blank" rel="noopener">Open in Dave's Redistricting App</a></p>`:""}
-</div>
-  </div></div></section>
-  <section class="band alt"><div class="wrap">
-  <h2>Three alternatives</h2>
-  <div class="cols">${METHODS.map(m=>{const e=c[m.id]||{};const stats=Object.entries(e.stats||{});
-    return `<article class="card" style="--c:${m.color}"><a class="tag" href="#${m.id}" style="text-decoration:none">${m.name}</a>
-      <div class="pic">${mapFor(st,m.id,true)}</div>
-      <p>${e.narrative?esc(e.narrative):`Luca's narrative for ${esc(st.name)} under ${m.name.toLowerCase()}: what this map prioritizes, what it gives up, and how it compares with the current districts.`}</p>
-      ${ratingsHTML(e.ratings)}
-      ${stats.length?`<dl>${stats.map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>`:""}
-      ${e.link?`<a class="more" href="${esc(e.link)}" target="_blank" rel="noopener">Open in Dave's Redistricting App →</a>`:""}</article>`}).join("")}</div>
-  ${pager}</div></section>`;
-}
-
-function methodPage(m){
-  return `<section class="band" style="border-top:8px solid ${m.color}"><div class="wrap two">
-  <div><span class="tag" style="--c:${m.color}">Method</span><h1 style="margin-top:8px">${m.name}</h1><p class="lede">${m.lede}</p></div>
-  <div><h3>What it prioritizes</h3><ul class="steps" style="margin-top:10px">${m.pri.map(p=>`<li>${p}</li>`).join("")}</ul><h3 style="margin-top:16px">The trade-off</h3><p style="margin-top:8px">${m.trade}</p></div>
+  <p class="lede">${st.seats} congressional districts. The map in use today, and Luca's optimal map.</p>
+  <div class="vs">${card(cur,"current","Current map","var(--cur)",`Luca's notes on ${esc(st.name)}'s current map: how it was drawn and what stands out about its lines.`)}
+  ${card(opt,"optimal","Optimal map","var(--geo)",`Luca's explanation of his optimal map for ${esc(st.name)}: the choices behind the new lines and what they change.`)}</div>
   </div></section>
-  <section class="band alt"><div class="wrap">
-  <h2>Every state, drawn for ${m.name.toLowerCase()}</h2>
-  <p class="lede">${MULTI.length} states with more than one district. Select a state for the full comparison.</p>
-  <div class="grid">${MULTI.map(s=>`<a class="mini" style="--c:${m.color}" href="#${s.slug}">${mapFor(s,m.id,false)}<b>${s.name}</b><small>${s.seats} districts</small></a>`).join("")}</div>
-  </div></section>`;
+  ${compare(cur.ratings,opt.ratings)?`<section class="band alt"><div class="wrap"><h2>How the maps compare</h2>${compare(cur.ratings,opt.ratings)}</div></section>`:""}
+  <section class="band"><div class="wrap" style="padding-top:0">${pager}</div></section>`;
 }
 
 function render(){
   const h=location.hash.slice(1)||"home";
-  const st=STATES.find(s=>s.slug===h), m=METHODS.find(x=>x.id===h);
-  const route=pages[h]?h:st?"states":m?h:"home";
-  app.innerHTML=st?statePage(st):m?methodPage(m):(pages[h]||pages.home)();
-  document.title=st?`${st.name} | Redrawing the Map`:m?`${m.name} | Redrawing the Map`:"Redrawing the Map";
+  const st=STATES.find(s=>s.slug===h);
+  const route=pages[h]?h:st?"states":"home";
+  app.innerHTML=st?statePage(st):(pages[h]||pages.home)();
+  document.title=st?`${st.name} | Redrawing the Map`:"Redrawing the Map";
   nav(route);
   loadSlots();
   const j=document.getElementById("jump");
