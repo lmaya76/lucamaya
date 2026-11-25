@@ -8,9 +8,9 @@ A static site: no build step, no framework.
 
 ## Adding a state
 
-1. In Dave's Redistricting App, export the map image and copy the share link.
-2. Save the image as `maps/<state>-<method>.png`, e.g. `maps/oh-communities.png`.
-3. Add the state's block to `content.js` (see the example at the top of that file).
-4. Deploy. Every page that shows that state updates automatically.
+1. Screenshot each map in Dave's Redistricting App and name it `<state>-<method>.png`, e.g. `oh-communities.png`.
+2. Upload the images to the `maps` folder. They appear on the site automatically.
+3. Add the state's links, ratings, and narratives to `content.js` (see the example at the top of that file).
+4. Commit. The site updates in about a minute.
 
 Method names used in `content.js`: `current`, `geographic`, `communities`, `partisan`.

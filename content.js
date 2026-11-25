@@ -6,9 +6,10 @@
    can have: current, geographic, communities, partisan.
    Every field is optional. Anything missing shows a placeholder.
 
-     image:     path to a map image in the maps/ folder,
-                e.g. "maps/tx-geographic.png"
-                (in Dave's Redistricting App: Export > Map image)
+     Map images need no entry here. Upload them to the maps/ folder
+     named <state>-<method>.png, e.g. maps/tx-geographic.png,
+     and they appear on the site automatically.
+
      link:      the map's share link from Dave's Redistricting App
      narrative: a paragraph explaining the map
      ratings:   Dave's Redistricting ratings, 0 to 100:
@@ -23,13 +24,11 @@ window.CONTENT = {
 
   // TX: {
   //   current: {
-  //     image: "maps/tx-current.png",
   //     link: "https://davesredistricting.org/join/...",
   //     narrative: "Texas's current map ...",
   //     ratings: { proportionality: 0, competitiveness: 0, minority: 0, compactness: 0, splitting: 0 }
   //   },
   //   geographic: {
-  //     image: "maps/tx-geographic.png",
   //     link: "https://davesredistricting.org/join/...",
   //     narrative: "This map keeps ...",
   //     ratings: { proportionality: 0, competitiveness: 0, minority: 0, compactness: 0, splitting: 0 }
